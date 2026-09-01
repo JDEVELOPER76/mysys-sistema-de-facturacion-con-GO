@@ -1,0 +1,264 @@
+html
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MySYS | Chats</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/admin.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/chats.css') }}"
+    >
+</head>
+
+<body data-usuario="{{ username }}">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+            <h1>
+                <span>My</span> SYS
+            </h1>
+        </div>
+
+        <ul class="nav-menu">
+
+            {% if rol == 'admin' %}
+
+                <li>
+                    <a href="/admin">
+                        <i class="fa-solid fa-chart-pie nav-icon"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/ventas">
+                        <i class="fa-solid fa-receipt nav-icon"></i>
+                        Historial de Ventas
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/productos">
+                        <i class="fa-solid fa-box nav-icon"></i>
+                        Productos
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/clientes">
+                        <i class="fa-solid fa-users nav-icon"></i>
+                        Clientes
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/estadistica">
+                        <i class="fa-solid fa-chart-line nav-icon"></i>
+                        Estadísticas
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/auditoria">
+                        <i class="fa-solid fa-shield-halved nav-icon"></i>
+                        Auditoría
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/usuarios">
+                        <i class="fa-solid fa-user-tie nav-icon"></i>
+                        Empleados
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/en_linea">
+                        <i class="fa-solid fa-circle-nodes nav-icon"></i>
+                        Usuarios en línea
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/reportes">
+                        <i class="fa-solid fa-file-pen nav-icon"></i>
+                        Reportes
+                    </a>
+                </li>
+
+                <li><a href="/admin/archivos"><i class="fa-solid fa-folder-open nav-icon"></i> Gestión de Archivos</a></li>
+
+
+                <li>
+                    <a href="/admin/chats" class="active">
+                        <i class="fa-solid fa-comments nav-icon"></i>
+                        Chats
+                    </a>
+                </li>
+
+            {% else %}
+
+                <li>
+                    <a href="/user/vender">
+                        <i class="fa-solid fa-cash-register nav-icon"></i>
+                        Ventas
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/code">
+                        <i class="fa-solid fa-barcode nav-icon"></i>
+                        Escáner
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/user/sala">
+                        <i class="fa-solid fa-id-badge nav-icon"></i>
+                        Mi Perfil
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/user/chats" class="active">
+                        <i class="fa-solid fa-comments nav-icon"></i>
+                        Chats
+                    </a>
+                </li>
+
+            {% endif %}
+
+            <li class="logout-item">
+                <a href="/logout">
+                    <i class="fa-solid fa-right-from-bracket nav-icon"></i>
+                    Salir
+                </a>
+            </li>
+
+        </ul>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="content-area chat-shell">
+
+            <header class="topbar">
+
+                <div class="action-title">
+                    <h2>Chats del equipo</h2>
+                    <p>
+                        Mensajería interna en tiempo real para administradores y empleados.
+                    </p>
+                </div>
+
+                <div class="user-profile">
+                    {{ username }}
+                </div>
+
+            </header>
+
+            <section class="chat-card">
+
+                <aside class="chat-rooms">
+
+                    <h3>Conversaciones</h3>
+
+                    <button
+                        class="chat-room active"
+                        type="button"
+                    >
+                        <i class="fa-solid fa-users"></i>
+                        <span>Equipo general</span>
+                    </button>
+
+                </aside>
+
+                <div class="chat-main">
+
+                    <header class="chat-head">
+
+                        <div>
+                            <h3>Equipo general</h3>
+                            <p>
+                                Todos los administradores y empleados
+                            </p>
+                        </div>
+
+                        <span
+                            id="chatStatus"
+                            class="chat-live"
+                        >
+                            Conectando…
+                        </span>
+
+                    </header>
+
+                    <div
+                        id="chatMessages"
+                        class="chat-messages"
+                    >
+                        <div class="chat-empty">
+                            Cargando mensajes…
+                        </div>
+                    </div>
+
+                    <form
+                        id="chatForm"
+                        class="chat-form"
+                    >
+
+                        <textarea
+                            id="chatInput"
+                            maxlength="2000"
+                            placeholder="Escribe un mensaje…"
+                            aria-label="Mensaje"
+                        ></textarea>
+
+                        <button
+                            class="chat-send"
+                            type="submit"
+                        >
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Enviar
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <script src="{{ url_for('static', path='js/chats.js') }}"></script>
+
+</body>
+
+</html>
+

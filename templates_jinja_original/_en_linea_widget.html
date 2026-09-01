@@ -1,0 +1,39 @@
+
+
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-info">
+            <p>Usuarios en línea ahora mismo</p>
+            <h3 id="totalEnLinea">0</h3>
+        </div>
+        <div class="metric-icon icon-success">
+            <i class="fa-solid fa-circle-nodes"></i>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-users"></i> Conectados</h3>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Puesto</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Última actividad</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTablaEnLinea">
+                <!-- Se llena en tiempo real vía /ws/en_linea (ver admin_en_linea.js) -->
+            </tbody>
+        </table>
+        <p id="enLineaVacio">No hay usuarios conectados en este momento.</p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', path='js/admin_en_linea.js') }}"></script>

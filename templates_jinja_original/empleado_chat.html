@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySYS | Chats</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/hadrox-shared.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/empleado_chat.css') }}">
+</head>
+<body>
+
+    <div style="display: flex; flex-direction: column; width: 100%; min-height: 100vh; background: var(--hadrox-bg);">
+
+        <!-- BARRA SUPERIOR (idéntica a empleado_sala) -->
+        <div class="top-navbar">
+            <span class="brand">My<span class="brand-accent">SYS</span></span>
+
+            <nav class="employee-nav">
+                {% if rol == 'admin' %}
+                    <a href="/admin" class="nav-link">
+                        <i class="fa-solid fa-chart-pie"></i><span class="nav-label">Dashboard</span>
+                    </a>
+                {% else %}
+                    <a href="/user/vender" class="nav-link">
+                        <i class="fa-solid fa-cash-register"></i><span class="nav-label">Ventas</span>
+                    </a>
+                {% endif %}
+                <a href="/code" class="nav-link">
+                    <i class="fa-solid fa-barcode"></i><span class="nav-label">Escáner</span>
+                </a>
+                <a href="/user/sala" class="nav-link">
+                    <i class="fa-solid fa-id-badge"></i><span class="nav-label">Mi Perfil</span>
+                </a>
+                <a href="/user/chats" class="nav-link active">
+                    <i class="fa-solid fa-comments"></i><span class="nav-label">Chats</span>
+                </a>
+            </nav>
+
+            <div class="navbar-right">
+                <div id="scannerStatus" class="scanner-status">
+                    <span class="status-dot"></span>
+                    <span id="scannerStatusText">Verificando escáner...</span>
+                </div>
+                <a href="/logout" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR PRINCIPAL (estilo sala-container) -->
+        <div class="chats-container">
+
+            <!-- TARJETA DE CHATS (estilo perfil-card) -->
+            <section class="chat-card">
+
+                <!-- PANEL DE SALAS (similar a panel-card) -->
+                <aside class="chat-rooms">
+                    <div class="chat-rooms-header">
+                        <i class="fa-solid fa-comments"></i>
+                        <h3>Conversaciones</h3>
+                    </div>
+                    <button class="chat-room-btn active" type="button" data-sala="general">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Equipo general</span>
+                        <span class="chat-room-badge" id="chatBadge">0</span>
+                    </button>
+                    <!-- Más salas se pueden agregar aquí dinámicamente -->
+                </aside>
+
+                <!-- ÁREA PRINCIPAL DEL CHAT -->
+                <div class="chat-main">
+
+                    <!-- Cabecera -->
+                    <header class="chat-head">
+                        <div class="chat-head-info">
+                            <div class="chat-icon">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <h3>Equipo general</h3>
+                                <p>Todos los administradores y empleados</p>
+                            </div>
+                        </div>
+                        <span id="chatStatus" class="chat-status">
+                            <span class="status-dot"></span>
+                            Conectando…
+                        </span>
+                    </header>
+
+                    <!-- Mensajes -->
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="chat-empty">
+                            <i class="fa-regular fa-comment-dots"></i>
+                            Cargando mensajes…
+                        </div>
+                    </div>
+
+                    <!-- Formulario -->
+                    <form id="chatForm" class="chat-form">
+                        <textarea id="chatInput" maxlength="2000" placeholder="Escribe un mensaje…" aria-label="Mensaje"></textarea>
+                        <button class="chat-send" type="submit">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Enviar</span>
+                        </button>
+                    </form>
+
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="{{ url_for('static', path='js/presencia.js') }}"></script>
+    <script src="{{ url_for('static', path='js/empleado_chat.js') }}"></script>
+</body>
+</html>
+s
