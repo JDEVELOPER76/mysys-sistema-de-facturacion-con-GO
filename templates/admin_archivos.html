@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySYS | Gestión de Archivos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ "/static/css/admin.css" }}">
+    <link rel="stylesheet" href="{{ "/static/css/archivos.css" }}">
+    <link rel="stylesheet" href="{{ "/static/css/_perfil_modales.css" }}">
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h1><span>My</span> SYS</h1>
+    </div>
+    <ul class="nav-menu">
+        <li><a href="/admin"><i class="fa-solid fa-chart-pie nav-icon"></i> Dashboard</a></li>
+        <li><a href="/admin/ventas"><i class="fa-solid fa-receipt nav-icon"></i> Historial de Ventas</a></li>
+        <li><a href="/admin/productos"><i class="fa-solid fa-box nav-icon"></i> Productos</a></li>
+        <li><a href="/admin/clientes"><i class="fa-solid fa-users nav-icon"></i> Clientes</a></li>
+        <li><a href="/admin/estadistica"><i class="fa-solid fa-chart-line nav-icon"></i> Estadísticas</a></li>
+        <li><a href="/admin/auditoria"><i class="fa-solid fa-shield-halved nav-icon"></i> Auditoría</a></li>
+        <li><a href="/admin/usuarios"><i class="fa-solid fa-user-tie nav-icon"></i> Empleados</a></li>
+        <li><a href="/admin/en_linea"><i class="fa-solid fa-circle-nodes nav-icon"></i> Usuarios en línea</a></li>
+        <li><a href="/admin/reportes"><i class="fa-solid fa-file-pen nav-icon"></i> Reportes</a></li>
+        <li><a href="/admin/archivos" class="active"><i class="fa-solid fa-folder-open nav-icon"></i> Gestión de Archivos</a></li>
+        <li><a href="/admin/chats"><i class="fa-solid fa-comments nav-icon"></i> Chats</a></li>
+        <li class="logout-item"><a href="/logout"><i class="fa-solid fa-right-from-bracket nav-icon"></i> Salir</a></li>
+    </ul>
+</aside>
+
+<main class="main-content">
+    <div class="content-area archivos-layout">
+        <div class="topbar">
+            <div class="action-title">
+                <h2>Gestión de Archivos</h2>
+                <p>Almacena, organiza y descarga archivos del equipo. Actualización en vivo vía WebSocket.</p>
+            </div>
+            <div class="user-profile pm-user-menu" id="pmUserMenu">
+                <button class="pm-user-trigger" onclick="pmToggleMenu()" type="button">
+                    <span class="pm-avatar-wrap" id="pmAvatarWrap">
+                        {{ if .foto }}
+                        <img src="{{ .foto }}" alt="{{ .username }}">
+                        {{ else }}
+                        <span class="avatar">{{ if .username }}{{ (upper (at .username 0)) }}{{ else }}{{ (upper "A") }}{{ end }}</span>
+                        {{ end }}
+                    </span>
+                    <span class="pm-user-name" id="pmUserName">{{ if .username }}{{ .username }}{{ else }}{{ "Admin" }}{{ end }}</span>
+                    <i class="fa-solid fa-chevron-down pm-chevron"></i>
+                </button>
+                <div class="pm-dropdown">
+                    <a href="#" onclick="event.preventDefault(); pmAbrirPerfil();"><i class="fa-solid fa-user-gear"></i> Mi perfil</a>
+                    <a href="/admin/en_linea"><i class="fa-solid fa-circle-nodes"></i> En línea</a>
+                    <div class="pm-divider"></div>
+                    <a href="/logout" class="pm-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas -->
+        <div class="archivos-metrics">
+            <div class="metric-card-archivos">
+                <div class="metric-info-archivos">
+                    <p>Total Archivos</p>
+                    <h3 id="totalArchivos">{{ (len .archivos) }}</h3>
+                </div>
+                <div class="metric-icon-archivos icon-purple"><i class="fa-solid fa-folder-open"></i></div>
+            </div>
+            <div class="metric-card-archivos">
+                <div class="metric-info-archivos">
+                    <p>Peso Total</p>
+                    <h3 id="totalPeso">{{ .tamano_total_formateado }}</h3>
+                </div>
+                <div class="metric-icon-archivos icon-orange"><i class="fa-solid fa-hard-drive"></i></div>
+            </div>
+            <div class="metric-card-archivos">
+                <div class="metric-info-archivos">
+                    <p>Colaboradores</p>
+                    <h3 id="totalUsuarios">{{ .total_usuarios_unicos }}</h3>
+                </div>
+                <div class="metric-icon-archivos icon-teal"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="metric-card-archivos" style="justify-content:center;">
+                <span id="estadoArchivos" class="live-status">Conectando…</span>
+            </div>
+        </div>
+
+        <!-- Zona de subida -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-cloud-arrow-up"></i> Subir nuevo archivo</h3>
+            </div>
+            <div style="padding: 1.5rem;">
+                <div class="form-grid" style="margin-bottom:1rem;">
+                    <div class="form-group full-width">
+                        <label for="descripcionArchivo">Descripción (opcional)</label>
+                        <input type="text" id="descripcionArchivo" class="form-control" placeholder="Ej: Factura marzo 2026, Contrato cliente XYZ…">
+                    </div>
+                </div>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <h4>Arrastra un archivo aquí o haz clic para seleccionar</h4>
+                    <p>Máximo 50 MB · PDF, Word, Excel, imágenes, ZIP…</p>
+                    <div class="progress-wrapper" id="progressWrapper">
+                        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de archivos -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-list"></i> Archivos almacenados</h3>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Archivo</th>
+                            <th>Peso</th>
+                            <th>Subido por</th>
+                            <th>Fecha</th>
+                            <th style="width:220px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaArchivosBody">
+                        {{ range $i, $a := .archivos }}
+                        <tr class="archivo-row" data-id="{{ $a.id }}" data-peso="{{ $a.tamano_bytes }}" data-uploader="{{ $a.subido_por }}">
+                            <td>
+                                <div class="archivo-meta">
+                                    <div class="archivo-icon {{ $a.icono_cls }}"><i class="fa-solid {{ $a.icono_icon }}"></i></div>
+                                    <div class="archivo-info">
+                                        <strong>{{ $a.nombre_original }}</strong>
+                                        <span>{{ (or $a.descripcion "Sin descripción") }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="archivo-peso">{{ $a.tamano_formateado }}</td>
+                            <td>
+                                <div class="archivo-uploader">
+                                    <div class="avatar-mini">{{ (upper (slice $a.subido_por 0 2)) }}</div>
+                                    <span>{{ $a.subido_por }}</span>
+                                </div>
+                            </td>
+                            <td class="archivo-fecha">{{ $a.fecha_subida }}</td>
+                            <td class="actions-cell">
+                                <a href="/admin/archivos/descargar/{{ $a.id }}" class="btn-download" title="Descargar">
+                                    <i class="fa-solid fa-download"></i> Descargar
+                                </a>
+                                <button class="btn-delete-file" onclick="eliminarArchivo({{ $a.id }})" title="Eliminar">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {{ else }}
+                        <tr>
+                            <td colspan="5" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+                                <i class="fa-solid fa-inbox" style="font-size:2rem;margin-bottom:0.75rem;display:block;"></i>
+                                No hay archivos almacenados aún. Sube el primero arrastrándolo arriba.
+                            </td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="{{ "/static/js/archivos.js" }}"></script>
+<script src="{{ "/static/js/_perfil_modales.js" }}"></script>
+{{ template "_perfil_modales.html" . }}
+</body>
+</html>

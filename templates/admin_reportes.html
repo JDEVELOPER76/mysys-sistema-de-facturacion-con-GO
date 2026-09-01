@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySYS | Reportes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Librería para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ "/static/css/admin_reportes.css" }}">
+    <link rel="stylesheet" href="{{ "/static/css/_perfil_modales.css" }}">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1><span>My</span> SYS</h1>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="/admin"><i class="fa-solid fa-chart-pie nav-icon"></i> Dashboard</a></li>
+            <li><a href="/admin/ventas"><i class="fa-solid fa-receipt nav-icon"></i> Historial de Ventas</a></li>
+            <li><a href="/admin/productos"><i class="fa-solid fa-box nav-icon"></i> Productos</a></li>
+            <li><a href="/admin/clientes"><i class="fa-solid fa-users nav-icon"></i> Clientes</a></li>
+            <li><a href="/admin/estadistica"><i class="fa-solid fa-chart-line nav-icon"></i> Estadísticas</a></li>
+            <li><a href="/admin/auditoria"><i class="fa-solid fa-shield-halved nav-icon"></i> Auditoría</a></li>
+            <li><a href="/admin/usuarios"><i class="fa-solid fa-user-tie nav-icon"></i> Empleados</a></li>
+            <li><a href="/admin/en_linea"><i class="fa-solid fa-circle-nodes nav-icon"></i> Usuarios en línea</a></li>
+            <li><a href="/admin/reportes" class="active"><i class="fa-solid fa-file-pen nav-icon"></i> Reportes</a></li>
+            <li><a href="/admin/archivos"><i class="fa-solid fa-folder-open nav-icon"></i> Gestión de Archivos</a></li>        
+            <li><a href="/admin/chats"><i class="fa-solid fa-comments nav-icon"></i> Chats</a></li>
+            <li class="logout-item"><a href="/logout"><i class="fa-solid fa-right-from-bracket nav-icon"></i> Salir</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="action-title">
+                <h2>Centro de Reportes</h2>
+                <p>Genera reportes detallados de ventas, auditoría, productos y más</p>
+            </div>
+            <div class="user-profile pm-user-menu" id="pmUserMenu">
+                <button class="pm-user-trigger" onclick="pmToggleMenu()" type="button">
+                    <span class="pm-avatar-wrap" id="pmAvatarWrap">
+                        {{ if .foto }}
+                        <img src="{{ .foto }}" alt="{{ .username }}">
+                        {{ else }}
+                        <span class="avatar">{{ if .username }}{{ (upper (at .username 0)) }}{{ else }}{{ (upper "A") }}{{ end }}</span>
+                        {{ end }}
+                    </span>
+                    <span class="pm-user-name" id="pmUserName">{{ (or .username "Admin") }}</span>
+                    <i class="fa-solid fa-chevron-down pm-chevron"></i>
+                </button>
+                <div class="pm-dropdown">
+                    <a href="#" onclick="event.preventDefault(); pmAbrirPerfil();"><i class="fa-solid fa-user-gear"></i> Mi perfil</a>
+                    <div class="pm-divider"></div>
+                    <a href="/logout" class="pm-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Filtros Generales -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-sliders"></i> Filtros de Reporte</h3>
+                </div>
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label><i class="fa-regular fa-calendar"></i> Desde</label>
+                        <input type="date" id="reporteFechaDesde">
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fa-regular fa-calendar"></i> Hasta</label>
+                        <input type="date" id="reporteFechaHasta">
+                    </div>
+                    <div class="filter-group">
+                        <label>Reporte</label>
+                        <select id="reporteTipo">
+                            <option value="ventas">Ventas</option>
+                            <option value="auditoria">Auditoría</option>
+                            <option value="productos">Productos</option>
+                            <option value="clientes">Clientes</option>
+                            <option value="empleados">Rendimiento Empleados</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="generarReporte()">
+                        <i class="fa-solid fa-file-export"></i> Generar Reporte
+                    </button>
+                    <button class="btn-success" onclick="exportarExcel()">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </button>
+                    <button class="btn-danger" onclick="exportarPDF()">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                    <button class="btn-secondary" onclick="exportarCSV()">
+                        <i class="fa-solid fa-file-csv"></i> CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs de Reportes -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="tabVentas"><i class="fa-solid fa-chart-simple"></i> Ventas</button>
+                <button class="tab-btn" data-tab="tabAuditoria"><i class="fa-solid fa-shield-halved"></i> Auditoría</button>
+                <button class="tab-btn" data-tab="tabProductos"><i class="fa-solid fa-box"></i> Productos</button>
+                <button class="tab-btn" data-tab="tabClientes"><i class="fa-solid fa-users"></i> Clientes</button>
+                <button class="tab-btn" data-tab="tabEmpleados"><i class="fa-solid fa-user-tie"></i> Empleados</button>
+            </div>
+
+            <!-- Tab: Ventas -->
+            <div id="tabVentas" class="tab-content active">
+                <div class="card" id="reporteVentasCard">
+                    <div class="card-header">
+                        <h3>Resumen de Ventas</h3>
+                        <span id="fechaReporteVentas" class="inline-style-1"></span>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <canvas id="ventasReporteChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="metodosPagoReporteChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="table-container" id="tablaVentasContainer">
+                        <p class="inline-style-2">
+                            <i class="fa-solid fa-info-circle"></i> Selecciona un rango de fechas y haz clic en "Generar Reporte".
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Auditoría -->
+            <div id="tabAuditoria" class="tab-content">
+                <div class="card" id="reporteAuditoriaCard">
+                    <div class="card-header">
+                        <h3>Registros de Auditoría</h3>
+                        <span id="fechaReporteAuditoria" class="inline-style-3"></span>
+                    </div>
+                    <div class="table-container" id="tablaAuditoriaContainer">
+                        <p class="inline-style-4">
+                            <i class="fa-solid fa-info-circle"></i> Selecciona un rango de fechas y haz clic en "Generar Reporte".
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Productos -->
+            <div id="tabProductos" class="tab-content">
+                <div class="card" id="reporteProductosCard">
+                    <div class="card-header">
+                        <h3>Inventario de Productos</h3>
+                        <span id="fechaReporteProductos" class="inline-style-5"></span>
+                    </div>
+                    <div class="table-container" id="tablaProductosContainer">
+                        <p class="inline-style-6">
+                            <i class="fa-solid fa-info-circle"></i> Selecciona un rango de fechas y haz clic en "Generar Reporte".
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Clientes -->
+            <div id="tabClientes" class="tab-content">
+                <div class="card" id="reporteClientesCard">
+                    <div class="card-header">
+                        <h3>Directorio de Clientes</h3>
+                        <span id="fechaReporteClientes" class="inline-style-7"></span>
+                    </div>
+                    <div class="table-container" id="tablaClientesContainer">
+                        <p class="inline-style-8">
+                            <i class="fa-solid fa-info-circle"></i> Selecciona un rango de fechas y haz clic en "Generar Reporte".
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Empleados -->
+            <div id="tabEmpleados" class="tab-content">
+                <div class="card" id="reporteEmpleadosCard">
+                    <div class="card-header">
+                        <h3>Rendimiento de Empleados</h3>
+                        <span id="fechaReporteEmpleados" class="inline-style-9"></span>
+                    </div>
+                    <div class="table-container" id="tablaEmpleadosContainer">
+                        <p class="inline-style-10">
+                            <i class="fa-solid fa-info-circle"></i> Selecciona un rango de fechas y haz clic en "Generar Reporte".
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script src="{{ "/static/js/presencia.js" }}"></script>
+<script src="{{ "/static/js/_perfil_modales.js" }}"></script>
+    {{ template "_perfil_modales.html" . }}
+
+    
+    <script src="{{ "/static/js/admin_reportes.js" }}"></script>
+</body>
+</html>

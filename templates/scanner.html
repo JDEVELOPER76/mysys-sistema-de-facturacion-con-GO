@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySYS | Escáner de Barras</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ "/static/css/scanner.css" }}">
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+    <!-- Audio para el beep -->
+    <audio id="beepSound" src="/static/sonidos/beep.mp3"></audio>
+
+    <div class="scanner-card" id="scannerApp">
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <h1><i class="fa-solid fa-barcode inline-style-1"></i> MySYS Scanner</h1>
+            <p>Inicia sesión para comenzar a escanear</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user"></i> Usuario</label>
+                    <input type="text" id="username" placeholder="Ingresa tu usuario" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Contraseña</label>
+                    <input type="password" id="password" placeholder="Ingresa tu contraseña" required>
+                </div>
+                <button type="submit" class="btn-login">
+                    <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+                </button>
+            </form>
+            
+            <!-- Botón para volver a Terminal de Ventas -->
+            <a href="/user/vender" class="inline-style-2">
+                <i class="fa-solid fa-cash-register"></i> Volver a Terminal de Ventas
+            </a>
+            
+            <div id="loginError" class="result-box hidden inline-style-3">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="errorMessage"></span>
+            </div>
+        </div>
+
+        <!-- Scanner Section (hidden initially) -->
+        <div id="scannerSection" class="inline-style-4">
+            <h1><i class="fa-solid fa-barcode inline-style-5"></i> MySYS Scanner</h1>
+            <p>Escanea productos y se agregarán automáticamente a la venta</p>
+            
+            <div class="user-info">
+                <span><i class="fa-solid fa-circle-user"></i> <span id="currentUser">-</span></span>
+                <button id="logoutBtn" class="btn-logout inline-style-6">
+                    <i class="fa-solid fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+
+            <div class="inline-style-7">
+                <a href="/user/vender" class="inline-style-8">
+                    <i class="fa-solid fa-cash-register"></i> Terminal de Ventas
+                </a>
+                <a href="/user/sala" class="inline-style-9">
+                    <i class="fa-solid fa-id-badge"></i> Mi Perfil
+                </a>
+            </div>
+            
+            <div id="reader"></div>
+
+            <div class="inline-style-10">
+                <label class="inline-style-11">
+                    <i class="fa-solid fa-image"></i> O carga una foto:
+                    <input type="file" id="fotoInput" accept="image/*" class="inline-style-12">
+                </label>
+            </div>
+
+            <div class="result-box" id="result-text">
+                <span class="inline-style-13">Esperando lectura...</span>
+            </div>
+            
+            <div id="status" class="status-badge">
+                <i class="fa-solid fa-circle-info"></i> No conectado
+            </div>
+
+            <div class="inline-style-14">
+                <i class="fa-solid fa-info-circle"></i> Los productos escaneados se agregarán automáticamente a tu sesión de ventas
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ "/static/js/scanner.js" }}"></script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+{{/* Panel "Miembros del equipo": lista TODOS los usuarios con su foto y
+     permite filtrarlos. Autocontenido (estilos + script), se incluye en
+     admin_chats.html y empleado_chat.html con:
+         {{ template "_equipo_chat.html" . }}
+     Requiere en el contexto: usuarios_equipo ([]map con username,
+     nombre_visible, puesto, tipo, foto). */}}
+<style>
+    .chat-team {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(148, 163, 184, .18);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        color: inherit;
+    }
+    .chat-team > h3 {
+        margin: 0 0 10px;
+        font-size: .78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        opacity: .65;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .chat-team-filter {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        margin-bottom: 8px;
+        border: 1px solid rgba(148, 163, 184, .25);
+        border-radius: 10px;
+        background: rgba(148, 163, 184, .07);
+    }
+    .chat-team-filter i { opacity: .5; font-size: .8rem; }
+    .chat-team-filter input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        font-size: .85rem;
+    }
+    .chat-team-filter input::placeholder { opacity: .5; }
+    .chat-team-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        overflow-y: auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .chat-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 8px;
+        border-radius: 10px;
+    }
+    .chat-user:hover { background: rgba(148, 163, 184, .10); }
+    .chat-user-foto, .chat-user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        flex: none;
+        object-fit: cover;
+    }
+    .chat-user-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #4f46e5;
+        color: #fff;
+        font-weight: 600;
+        font-size: .95rem;
+    }
+    .chat-user-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
+    .chat-user-nombre {
+        font-size: .87rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .chat-user-detalle {
+        font-size: .73rem;
+        opacity: .55;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .chat-user-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex: none;
+        background: #94a3b8;
+    }
+    .chat-user-dot.en-linea { background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, .18); }
+    .chat-team-empty { font-size: .82rem; opacity: .55; padding: 8px; }
+    .chat-team-sin-resultados { font-size: .82rem; opacity: .55; padding: 8px; display: none; }
+
+    /* ── Clic para abrir chat privado ── */
+    .chat-user { cursor: pointer; }
+    .chat-user:active { background: rgba(148, 163, 184, .18); }
+
+    /* ── Salas privadas (dm) en la lista de conversaciones ── */
+    .chat-room-dm { gap: 10px; text-align: left; }
+    .dm-foto, .dm-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        flex: none;
+        object-fit: cover;
+    }
+    .dm-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #4f46e5;
+        color: #fff;
+        font-weight: 600;
+        font-size: .8rem;
+    }
+    .dm-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
+    .dm-nombre {
+        font-size: .85rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .dm-preview {
+        font-size: .72rem;
+        opacity: .5;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 140px;
+    }
+    .chat-room .chat-room-badge, .chat-room-dm .chat-room-badge {
+        margin-left: auto;
+        flex: none;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        background: #ef4444;
+        color: #fff;
+        font-size: .68rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<div class="chat-team">
+    <h3><i class="fa-solid fa-users"></i> Miembros del equipo</h3>
+    <div class="chat-team-filter">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="filtroEquipo" type="search" placeholder="Filtrar usuarios…" autocomplete="off" aria-label="Filtrar usuarios">
+    </div>
+    <ul id="listaEquipo" class="chat-team-list">
+        {{ range $u := .usuarios_equipo }}
+        <li class="chat-user" role="button" tabindex="0" title="Chatear en privado con {{ $u.nombre_visible }}"
+            data-buscar="{{ lower (printf "%s %s %s" $u.nombre_visible $u.username (or $u.puesto "")) }}"
+            data-username="{{ $u.username }}" data-nombre="{{ $u.nombre_visible }}" data-foto="{{ or $u.foto "" }}">
+            {{ if $u.foto }}
+            <img class="chat-user-foto" src="{{ $u.foto }}" alt="{{ $u.nombre_visible }}" loading="lazy">
+            {{ else }}
+            <span class="chat-user-avatar">{{ upper (at $u.nombre_visible 0) }}</span>
+            {{ end }}
+            <span class="chat-user-info">
+                <span class="chat-user-nombre">{{ $u.nombre_visible }}</span>
+                <span class="chat-user-detalle">{{ or $u.puesto "Sin puesto" }} · {{ if (eqx $u.tipo "admin") }}Administrador{{ else }}Empleado{{ end }}</span>
+            </span>
+            <span class="chat-user-dot" data-user="{{ $u.username }}" title="Desconectado"></span>
+        </li>
+        {{ else }}
+        <li class="chat-team-empty">No hay usuarios registrados.</li>
+        {{ end }}
+    </ul>
+    <p id="equipoSinResultados" class="chat-team-sin-resultados">Sin resultados para ese filtro.</p>
+</div>
+
+<script>
+(function () {
+    var input = document.getElementById('filtroEquipo');
+    var lista = document.getElementById('listaEquipo');
+    var vacio = document.getElementById('equipoSinResultados');
+    if (!input || !lista) { return; }
+
+    // Filtro por nombre, usuario o puesto
+    input.addEventListener('input', function () {
+        var q = input.value.trim().toLowerCase();
+        var visibles = 0;
+        lista.querySelectorAll('.chat-user').forEach(function (li) {
+            var coincide = (li.dataset.buscar || '').indexOf(q) !== -1;
+            li.style.display = coincide ? '' : 'none';
+            if (coincide) { visibles++; }
+        });
+        if (vacio) { vacio.style.display = visibles === 0 ? 'block' : 'none'; }
+    });
+
+    // Clic (o Enter) en un usuario → abrir conversación privada 1 a 1
+    function abrirPrivadoDesde(li) {
+        if (!window.MySYSChat) { return; }
+        window.MySYSChat.abrirPrivado(li.dataset.username, li.dataset.nombre, li.dataset.foto || null);
+    }
+    lista.addEventListener('click', function (e) {
+        var li = e.target.closest('.chat-user');
+        if (li) { abrirPrivadoDesde(li); }
+    });
+    lista.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') { return; }
+        var li = e.target.closest('.chat-user');
+        if (li) { abrirPrivadoDesde(li); }
+    });
+
+    // Punto verde para los usuarios en línea (consulta /api/usuarios/en_linea)
+    function actualizarEnLinea() {
+        fetch('/api/usuarios/en_linea')
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d) { return; }
+                var conectados = {};
+                (d.conectados || []).forEach(function (u) { conectados[u.username] = true; });
+                lista.querySelectorAll('.chat-user-dot').forEach(function (dot) {
+                    var activo = !!conectados[dot.dataset.user];
+                    dot.classList.toggle('en-linea', activo);
+                    dot.title = activo ? 'En línea' : 'Desconectado';
+                });
+            })
+            .catch(function () { });
+    }
+    actualizarEnLinea();
+    setInterval(actualizarEnLinea, 15000);
+})();
+</script>

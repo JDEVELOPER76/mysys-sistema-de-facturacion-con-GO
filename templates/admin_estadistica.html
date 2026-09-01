@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><script>(function(w,i,g){w[g]=w[g]||[];if(typeof w[g].push=='function')w[g].push(i)})
+(window,'GTM-K3QN3TWK','google_tags_first_party');</script><script>(function(w,d,s,l){w[l]=w[l]||[];(function(){w[l].push(arguments);})('set', 'developer_id.dY2E1Nz', true);
+		var f=d.getElementsByTagName(s)[0],
+		j=d.createElement(s);j.async=true;j.src='/gk7x/';
+		f.parentNode.insertBefore(j,f);
+		})(window,document,'script','dataLayer');</script><script>(function(w,i,g){w[g]=w[g]||[];if(typeof w[g].push=='function')w[g].push(i)})
+(window,'GTM-K3QN3TWK','google_tags_first_party');</script><script>(function(w,d,s,l){w[l]=w[l]||[];(function(){w[l].push(arguments);})('set', 'developer_id.dY2E1Nz', true);
+		var f=d.getElementsByTagName(s)[0],
+		j=d.createElement(s);j.async=true;j.src='/gk7x/';
+		f.parentNode.insertBefore(j,f);
+		})(window,document,'script','dataLayer');</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySYS | Estadísticas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="{{ "/static/css/admin_estadistica.css" }}">
+    <link rel="stylesheet" href="{{ "/static/css/_perfil_modales.css" }}">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1><span>My</span> SYS</h1>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="/admin"><i class="fa-solid fa-chart-pie nav-icon"></i> Dashboard</a></li>
+            <li><a href="/admin/ventas"><i class="fa-solid fa-receipt nav-icon"></i> Historial de Ventas</a></li>
+            <li><a href="/admin/productos"><i class="fa-solid fa-box nav-icon"></i> Productos</a></li>
+            <li><a href="/admin/clientes"><i class="fa-solid fa-users nav-icon"></i> Clientes</a></li>
+            <li><a href="/admin/estadistica" class="active"><i class="fa-solid fa-chart-line nav-icon"></i> Estadísticas</a></li>
+            <li><a href="/admin/auditoria"><i class="fa-solid fa-shield-halved nav-icon"></i> Auditoría</a></li>
+            <li><a href="/admin/usuarios"><i class="fa-solid fa-user-tie nav-icon"></i> Empleados</a></li>
+            <li><a href="/admin/en_linea"><i class="fa-solid fa-circle-nodes nav-icon"></i> Usuarios en línea</a></li>
+            <li><a href="/admin/reportes"><i class="fa-solid fa-file-pen nav-icon"></i> Reportes</a></li>
+            <li><a href="/admin/archivos"><i class="fa-solid fa-folder-open nav-icon"></i> Gestión de Archivos</a></li>           
+            <li><a href="/admin/chats"><i class="fa-solid fa-comments nav-icon"></i> Chats</a></li>
+            <li class="logout-item"><a href="/logout"><i class="fa-solid fa-right-from-bracket nav-icon"></i> Salir</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="action-title">
+                <h2>Estadísticas de Ventas</h2>
+                <p>Análisis detallado del comportamiento de ventas y rendimiento del negocio</p>
+            </div>
+            <div class="user-profile pm-user-menu" id="pmUserMenu">
+                <button class="pm-user-trigger" onclick="pmToggleMenu()" type="button">
+                    <span class="pm-avatar-wrap" id="pmAvatarWrap">
+                        {{ if .foto }}
+                        <img src="{{ .foto }}" alt="{{ .username }}">
+                        {{ else }}
+                        <span class="avatar">{{ if .username }}{{ (upper (at .username 0)) }}{{ else }}{{ (upper "A") }}{{ end }}</span>
+                        {{ end }}
+                    </span>
+                    <span class="pm-user-name" id="pmUserName">{{ (or .username "Admin") }}</span>
+                    <i class="fa-solid fa-chevron-down pm-chevron"></i>
+                </button>
+                <div class="pm-dropdown">
+                    <a href="#" onclick="event.preventDefault(); pmAbrirPerfil();"><i class="fa-solid fa-user-gear"></i> Mi perfil</a>
+                    <div class="pm-divider"></div>
+                    <a href="/logout" class="pm-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            {{/* Filtro SERVER-SIDE: el <form method="get"> recarga /admin/estadistica con los parámetros
+               desde/hasta/periodo y el servidor aplica el filtro en SQL (ventas_db.*_periodo). */}}
+            <form class="filters-bar" id="filtroEstadisticaForm" method="get" action="/admin/estadistica">
+                <div class="filter-group">
+                    <label><i class="fa-regular fa-calendar"></i> Periodo:</label>
+                    <select id="periodoSelect" name="periodo"
+                            onchange="document.getElementById('fechaDesde').value=''; document.getElementById('fechaHasta').value=''; this.form.submit();">
+                        <option value="7"   {{ if (eqx .filtro.periodo 7) }}selected{{ end }}>Últimos 7 días</option>
+                        <option value="15"  {{ if (eqx .filtro.periodo 15) }}selected{{ end }}>Últimos 15 días</option>
+                        <option value="30"  {{ if (eqx .filtro.periodo 30) }}selected{{ end }}>Últimos 30 días</option>
+                        <option value="90"  {{ if (eqx .filtro.periodo 90) }}selected{{ end }}>Últimos 90 días</option>
+                        <option value="365" {{ if (eqx .filtro.periodo 365) }}selected{{ end }}>Último año</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fa-regular fa-calendar-days"></i> Desde:</label>
+                    <input type="date" id="fechaDesde" name="desde" value="{{ .filtro.desde }}">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fa-regular fa-calendar-days"></i> Hasta:</label>
+                    <input type="date" id="fechaHasta" name="hasta" value="{{ .filtro.hasta }}">
+                </div>
+                <button type="submit" class="btn-primary inline-style-1">
+                    <i class="fa-solid fa-filter"></i> Aplicar
+                </button>
+                {{ if .error_filtro }}
+                <span class="inline-style-17" title="Aviso de filtro"><i class="fa-solid fa-triangle-exclamation"></i> {{ .error_filtro }}</span>
+                {{ end }}
+            </form>
+
+            {{/* Métricas — render Jinja directo, el JS ya NO las sobrescribe */}}
+            <section class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <p>Ventas del Periodo</p>
+                        <h3 id="totalPeriodo" class="currency-format">${{ (miles (or .total_periodo 0)) }}</h3>
+                    </div>
+                    <div class="metric-icon icon-success">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <p>Total de Ventas</p>
+                        <h3 id="totalVentasPeriodo">{{ (or .total_ventas_periodo 0) }}</h3>
+                    </div>
+                    <div class="metric-icon icon-blue">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <p>Ticket Promedio</p>
+                        <h3 id="ticketPromedio" class="currency-format">${{ (miles (or .ticket_promedio 0)) }}</h3>
+                    </div>
+                    <div class="metric-icon icon-warning">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <p>Productos Vendidos</p>
+                        <h3 id="productosVendidos">{{ (or .productos_vendidos 0) }}</h3>
+                    </div>
+                    <div class="metric-icon icon-danger">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                </div>
+            </section>
+
+            {{/* Gráficas principales: canvas + data inyectada con |tojson al final del documento */}}
+            <section class="charts-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-bar inline-style-2"></i> Ventas por Día</h3>
+                        <span class="inline-style-3">Evolución diaria</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="ventasDiariasChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-doughnut inline-style-4"></i> Métodos de Pago</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="metodosPagoChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="charts-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-ranking-star inline-style-5"></i> Top 5 Productos Más Vendidos</h3>
+                    </div>
+                    <div class="chart-container inline-style-6">
+                        <canvas id="topProductosChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-users inline-style-7"></i> Top 5 Clientes</h3>
+                    </div>
+                    <div class="chart-container inline-style-8">
+                        <canvas id="topClientesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            {{/* Tabla de rendimiento por empleado — render Jinja iterando sobre los datos filtrados */}}
+            <section class="card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-user-tie inline-style-9"></i> Rendimiento por Empleado</h3>
+                    <span class="inline-style-10">Total facturado por vendedor</span>
+                </div>
+                <div class="table-container">
+                    <table id="tablaEmpleadosEstadistica">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Empleado</th>
+                                <th>Ventas Realizadas</th>
+                                <th>Total Facturado</th>
+                                <th>Ticket Promedio</th>
+                                <th>Rendimiento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {{ if (and .empleados_ventas (gtx (len .empleados_ventas) 0)) }}
+                            {{ range $i, $empleado := .empleados_ventas }}
+                            <tr>
+                                <td>{{ (inc $i) }}</td>
+                                <td><strong>{{ (or $empleado.nombre_empleado "-") }}</strong></td>
+                                <td>{{ (or $empleado.cantidad_ventas 0) }}</td>
+                                <td><strong>${{ (miles (or $empleado.total_facturado 0)) }}</strong></td>
+                                <td>${{ (miles (or $empleado.ticket_promedio 0)) }}</td>
+                                <td>
+                                    <div class="inline-style-11">
+                                        <div class="inline-style-12">
+                                            {{ $pct := (minN (or $empleado.porcentaje 0) 100.0) }}
+                                            <div class="inline-style-13" style="width: {{ (printf "%.2f" $pct) }}%"></div>
+                                        </div>
+                                        <span class="inline-style-14">{{ (round (or $empleado.porcentaje 0)) }}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{ end }}
+                        {{ else }}
+                            <tr><td colspan="6" class="inline-style-15"><i class="fa-solid fa-inbox inline-style-16"></i> No hay datos de ventas por empleado en el periodo seleccionado.</td></tr>
+                        {{ end }}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    {{/* Payload de gráficos — FIX: aplicar | tojson AL DICT COMPLETO para que el resultado sea JSON
+       válido. Antes se aplicaba |tojson a cada valor y Jinja emitía el repr() del dict Python
+       (con comillas simples y comillas escapadas), que NO se podía parsear como JSON y los charts
+       quedaban vacíos cuando el filtro cambiaba. */}}
+    <script id="statsData" type="application/json">{{ (tojson .stats_payload) }}</script>
+
+<script src="{{ "/static/js/presencia.js" }}"></script>
+<script src="{{ "/static/js/_perfil_modales.js" }}"></script>
+    {{ template "_perfil_modales.html" . }}
+    <script src="{{ "/static/js/admin_estadistica.js" }}"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925" integrity="sha512-d9sL6GJLXn6fInD1+TVXhTcQOsmxeHfmHAvwGDIxp5TO+uo1fiWW7mHomMj4MLRlCsJDTqXzWLHJFFlPCEIj/A==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySYS | Gestión de Clientes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="{{ "/static/css/admin_clientes.css" }}">
+    <link rel="stylesheet" href="{{ "/static/css/_perfil_modales.css" }}">
+</head>
+<body>
+
+    <!-- ============================================================
+         SIDEBAR - UNA SOLA VEZ
+         ============================================================ -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1><span>My</span> SYS</h1>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="/admin"><i class="fa-solid fa-chart-pie nav-icon"></i> Dashboard</a></li>
+            <li><a href="/admin/ventas"><i class="fa-solid fa-receipt nav-icon"></i> Historial de Ventas</a></li>
+            <li><a href="/admin/productos"><i class="fa-solid fa-box nav-icon"></i> Productos</a></li>
+            <li><a href="/admin/clientes" class="active"><i class="fa-solid fa-users nav-icon"></i> Clientes</a></li>
+            <li><a href="/admin/estadistica"><i class="fa-solid fa-chart-line nav-icon"></i> Estadísticas</a></li>
+            <li><a href="/admin/auditoria"><i class="fa-solid fa-shield-halved nav-icon"></i> Auditoría</a></li>
+            <li><a href="/admin/usuarios"><i class="fa-solid fa-user-tie nav-icon"></i> Empleados</a></li>
+            <li><a href="/admin/en_linea"><i class="fa-solid fa-circle-nodes nav-icon"></i> Usuarios en línea</a></li>
+            <li><a href="/admin/reportes"><i class="fa-solid fa-file-pen nav-icon"></i> Reportes</a></li>
+            <li><a href="/admin/archivos"><i class="fa-solid fa-folder-open nav-icon"></i> Gestión de Archivos</a></li>          
+            <li><a href="/admin/chats"><i class="fa-solid fa-comments nav-icon"></i> Chats</a></li>
+            <li class="logout-item"><a href="/logout"><i class="fa-solid fa-right-from-bracket nav-icon"></i> Salir</a></li>
+        </ul>
+    </aside>
+
+    <!-- ============================================================
+         MAIN CONTENT - UNA SOLA VEZ
+         ============================================================ -->
+    <div class="main-content">
+        <header class="topbar">
+            <div class="action-title">
+                <h2>Directorio de Clientes</h2>
+                <p>Registro de compradores y asignación simplificada en el sistema</p>
+            </div>
+            <div class="user-profile pm-user-menu" id="pmUserMenu">
+                <button class="pm-user-trigger" onclick="pmToggleMenu()" type="button" aria-expanded="false">
+                    <span class="pm-avatar-wrap" id="pmAvatarWrap">
+                        {{ if .foto }}
+                        <img src="{{ .foto }}" alt="{{ .username }}">
+                        {{ else }}
+                        <span class="avatar">{{ if .username }}{{ (upper (at .username 0)) }}{{ else }}{{ (upper "A") }}{{ end }}</span>
+                        {{ end }}
+                    </span>
+                    <span class="pm-user-name" id="pmUserName">{{ if .username }}{{ .username }}{{ else }}{{ "Admin" }}{{ end }}</span>
+                    <i class="fa-solid fa-chevron-down pm-chevron"></i>
+                </button>
+                <div class="pm-dropdown" id="pmDropdown">
+                    <a href="#" onclick="event.preventDefault(); pmAbrirPerfil();"><i class="fa-solid fa-user-gear"></i> Mi perfil</a>
+                    <div class="pm-divider"></div>
+                    <a href="/logout" class="pm-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-area">
+            <!-- Card de registro -->
+            <section class="card">
+                <div class="card-header">
+                    <h3>Registrar Nuevo Cliente</h3>
+                    <button class="btn-submit" onclick="openRegisterModal()">
+                        <i class="fa-solid fa-user-plus"></i> Nuevo Cliente
+                    </button>
+                </div>
+                <div class="inline-style-1">
+                    <i class="fa-solid fa-info-circle inline-style-2"></i>
+                    Haz clic en <strong>"Nuevo Cliente"</strong> para abrir el formulario completo de registro.
+                </div>
+            </section>
+
+            <!-- Tabla de clientes -->
+            <section class="card">
+                <div class="card-header">
+                    <h3>Base de Datos de Clientes</h3>
+                    <span class="inline-style-3">
+                        Estatus: <span class="inline-style-4">En Línea</span>
+                        <span class="inline-style-5">Total: <strong id="clientCount">{{ (len .clientes) }}</strong></span>
+                    </span>
+                </div>
+
+                <!-- Filtro de búsqueda -->
+                <div class="filter-bar" id="filterBar">
+                    <div class="form-group">
+                        <label for="searchInput"><i class="fa-solid fa-search"></i> Buscar cliente</label>
+                        <input type="text" id="searchInput" placeholder="Nombre, ID, teléfono o email..." oninput="filterTable()">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterType">Tipo de cliente</label>
+                        <select id="filterType" onchange="filterTable()">
+                            <option value="all">Todos</option>
+                            <option value="persona">Persona Natural</option>
+                            <option value="empresa">Empresa / RUC</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn-filter-clear" onclick="clearFilters()">
+                            <i class="fa-solid fa-undo"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    {{ if .clientes }}
+                    <table id="clientTable">
+                        <thead>
+                            <tr>
+                                <th class="inline-style-6">Código (ID)</th>
+                                <th>Nombre Completo del Cliente</th>
+                                <th class="inline-style-7">Teléfono</th>
+                                <th class="inline-style-8">Email</th>
+                                <th class="inline-style-9">Estado</th>
+                                <th class="inline-style-10">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientTableBody">
+                            {{ range $i, $c := .clientes }}
+                            <tr data-client-id="{{ $c.id }}" data-nombre="{{ (lower $c.nombre) }}" data-telefono="{{ (or $c.telefono "") }}" data-email="{{ (or $c.email "") }}" data-tipo="{{ (or $c.tipo_identificacion "persona") }}">
+                                <td><span class="inline-style-11">#00{{ $c.id }}</span></td>
+                                <td><span class="inline-style-12">{{ $c.nombre }}</span></td>
+                                <td>{{ (or $c.telefono "—") }}</td>
+                                <td>{{ (or $c.email "—") }}</td>
+                                <td class="inline-style-13">
+                                    {{ if $c.identificacion }}
+                                    <span class="badge badge-success">Verificado</span>
+                                    {{ else }}
+                                    <span class="badge badge-warning">Pendiente</span>
+                                    {{ end }}
+                                </td>
+                                <td class="inline-style-14">
+                                    <div class="actions-cell inline-style-15">
+                                        <button class="btn-view" onclick="openClientDetail({{ $c.id }})" title="Ver detalles">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                        <form action="/admin/clientes/eliminar/{{ $c.id }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar a este cliente?');" class="inline-style-16">
+                                            <button type="submit" class="btn-delete" title="Eliminar Cliente">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{ end }}
+                        </tbody>
+                    </table>
+                    {{ else }}
+                    <div class="empty-state">
+                        <i class="fa-solid fa-users-slash"></i>
+                        <p class="inline-style-17">No hay clientes registrados en la base de datos.</p>
+                    </div>
+                    {{ end }}
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============================================================
+         MODAL DE REGISTRO DE CLIENTE
+         ============================================================ -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-plus"></i> Registrar Nuevo Cliente</h3>
+                <button class="modal-close" onclick="closeRegisterModal()">&times;</button>
+            </div>
+            <form id="registerForm" action="/admin/clientes/nuevo" method="POST">
+                <div class="modal-body">
+                    <!-- Información Personal -->
+                    <div class="inline-style-18">
+                        <h4 class="inline-style-19">
+                            <i class="fa-solid fa-id-card"></i> Información Personal
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="reg_nombre">Nombre Completo / Razón Social <span class="inline-style-20">*</span></label>
+                                <input type="text" id="reg_nombre" name="nombre" placeholder="Ej. Juan Pérez o Importadora Automotriz S.A." required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg_tipo_identificacion">Tipo de Identificación</label>
+                                <select id="reg_tipo_identificacion" name="tipo_identificacion">
+                                    <option value="Cédula">Cédula</option>
+                                    <option value="RUC">RUC</option>
+                                    <option value="Pasaporte">Pasaporte</option>
+                                    <option value="Cédula Extranjera">Cédula Extranjera</option>
+                                    <option value="NIT">NIT</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg_identificacion">Número de Identificación</label>
+                                <input type="text" id="reg_identificacion" name="identificacion" placeholder="Ej. 1234567890">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Contacto -->
+                    <div class="inline-style-21">
+                        <h4 class="inline-style-22">
+                            <i class="fa-solid fa-address-card"></i> Información de Contacto
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg_telefono">Teléfono <span class="inline-style-23">*</span></label>
+                                <input type="tel" id="reg_telefono" name="telefono" placeholder="Ej. 0987654321" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg_email">Correo Electrónico</label>
+                                <input type="email" id="reg_email" name="email" placeholder="Ej. cliente@correo.com">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="reg_direccion">Dirección</label>
+                                <textarea id="reg_direccion" name="direccion" placeholder="Ej. Av. Principal 123, Ciudad" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeRegisterModal()">
+                        <i class="fa-solid fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-save"></i> Guardar Cliente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL DE DETALLE DEL CLIENTE
+         ============================================================ -->
+    <div class="modal-overlay" id="clientDetailModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user"></i> Detalle del Cliente</h3>
+                <button class="modal-close" onclick="closeClientDetail()">&times;</button>
+            </div>
+            <div class="modal-body" id="clientDetailBody">
+                <div class="client-detail-grid" id="clientDetailGrid">
+                    <!-- Se llena dinámicamente con JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeClientDetail()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    
+
+<script src="{{ "/static/js/presencia.js" }}"></script>
+<script src="{{ "/static/js/_perfil_modales.js" }}"></script>
+    {{ template "_perfil_modales.html" . }}
+    <script src="{{ "/static/js/admin_clientes.js" }}"></script>
+</body>
+</html>
